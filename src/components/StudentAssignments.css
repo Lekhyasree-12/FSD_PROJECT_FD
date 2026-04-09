@@ -122,3 +122,25 @@
   background: #B8E3E9; /* Background for logo to stand out */
   padding: 4px;
 }
+/* File input styling */
+.assignment-card input[type="file"] {
+  margin: 10px 0;
+  display: block;
+}
+
+/* Selected file text */
+.assignment-card p {
+  margin: 5px 0;
+}
+
+/* Better button spacing */
+.assignment-card button {
+  margin-top: 10px;
+}
+
+/* Optional: make card cleaner */
+.assignment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

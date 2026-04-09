@@ -10,59 +10,58 @@ function TeacherCreate() {
   const [dueDate, setDueDate] = useState("");
   const [points, setPoints] = useState(100);
 
+  // 🔥 LOAD SUBJECTS FROM BACKEND (FIXED)
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("subjects")) || [];
-    setSubjects(stored);
+    fetch("http://localhost:8080/subjects")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Subjects:", data);
+        setSubjects(data);
+      })
+      .catch((err) => console.error("Error loading subjects:", err));
   }, []);
 
+  // ✅ CREATE ASSIGNMENT
   const handlePublish = () => {
     if (!title || !selectedSubjectId || !dueDate) {
       alert("Please fill all required fields");
       return;
     }
 
-    const storedSubjects =
-      JSON.parse(localStorage.getItem("subjects")) || [];
+    fetch("http://localhost:8080/assignments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title,
+        description,
+        dueDate,
+        points: Number(points),
+        subjectId: Number(selectedSubjectId) // 🔥 IMPORTANT FIX
+      })
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create assignment");
+        return res.json();
+      })
+      .then(() => {
+        alert("Assignment Created Successfully!");
 
-    console.log("Selected Subject ID:", selectedSubjectId);
-    console.log("Stored Subjects:", storedSubjects);
+        // 🔥 RESET FORM
+        setTitle("");
+        setDescription("");
+        setDueDate("");
+        setPoints(100);
+        setSelectedSubjectId("");
 
-    const updatedSubjects = storedSubjects.map((subject) => {
-      if (subject.id === Number(selectedSubjectId)) {
-        console.log("MATCH FOUND:", subject.name);
-
-        return {
-          ...subject,
-          assignments: [
-            ...(subject.assignments || []),
-            {
-              id: Date.now(),
-              title,
-              description,
-              deadline: dueDate,
-              points,
-              submissions: []
-            }
-          ]
-        };
-      }
-      return subject;
-    });
-
-    console.log("Updated Subjects:", updatedSubjects);
-
-    localStorage.setItem("subjects", JSON.stringify(updatedSubjects));
-    setSubjects(updatedSubjects);
-// 🔥 ADD THIS LINE
-window.dispatchEvent(new Event("subjectsUpdated"));
-    alert("Assignment Created Successfully!");
-
-    // Reset form
-    setTitle("");
-    setSelectedSubjectId("");
-    setDescription("");
-    setDueDate("");
-    setPoints(100);
+        // 🔥 OPTIONAL: refresh dashboard
+        window.location.reload(); 
+      })
+      .catch((err) => {
+        console.error("ERROR:", err);
+        alert("Error creating assignment");
+      });
   };
 
   return (
@@ -82,6 +81,8 @@ window.dispatchEvent(new Event("subjectsUpdated"));
         onChange={(e) => setSelectedSubjectId(e.target.value)}
       >
         <option value="">Select Subject</option>
+
+        {/* 🔥 BACKEND SUBJECTS */}
         {subjects.map((sub) => (
           <option key={sub.id} value={sub.id}>
             {sub.name}

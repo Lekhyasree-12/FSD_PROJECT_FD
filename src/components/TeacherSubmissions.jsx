@@ -1,115 +1,84 @@
 import { useEffect, useState } from "react";
 import "./TeacherDashboard.css";
-
-function TeacherSubmissions() {
+import { useNavigate } from "react-router-dom";
+function TeacherSubmissions({ onGrade }) {
   const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-useEffect(() => {
-  const storedSubjects =
-    JSON.parse(localStorage.getItem("subjects")) || [];
-
-  const allAssignments = storedSubjects.flatMap((subject) =>
-    (subject.assignments || []).map((assignment) => ({
-      ...assignment,
-      subject: subject.name,
-      subjectId: subject.id
-    }))
-  );
-
-  setAssignments(allAssignments);
-}, []);
-
-  // Save changes when grading
-  const updateStorage = (updated) => {
-    setAssignments(updated);
-    localStorage.setItem("assignments", JSON.stringify(updated));
+  // 🔥 Load assignments
+  const loadAssignments = () => {
+    fetch("http://localhost:8080/assignments")
+      .then(res => res.json())
+      .then(data => setAssignments(data))
+      .catch(err => console.error(err));
   };
 
-  const handleGrade = (assignmentId, studentEmail, grade, feedback) => {
+  // 🔥 Load submissions
+  const loadSubmissions = () => {
+    fetch("http://localhost:8080/submissions")
+      .then(res => res.json())
+      .then(data => setSubmissions(data))
+      .catch(err => console.error(err));
+  };
 
-  const updated = assignments.map((a) => {
-    if (a.id === assignmentId) {
-      return {
-        ...a,
-        submissions: a.submissions.map((s) =>
-          s.student === studentEmail
-            ? {
-                ...s,
-                score: Number(grade),   // IMPORTANT
-                feedback: feedback
-              }
-            : s
-        )
-      };
-    }
-    return a;
+  useEffect(() => {
+    loadAssignments();
+    loadSubmissions();
+  }, []);
+
+  // 🔥 Combine data
+  const allSubmissions = submissions.map((s) => {
+    const assignment = assignments.find(a => a.id === s.assignmentId);
+
+    return {
+      ...s,
+      assignmentTitle: assignment ? assignment.title : "Unknown"
+    };
   });
 
-  setAssignments(updated);
-  localStorage.setItem("assignments", JSON.stringify(updated));
-};
-  const allSubmissions = assignments.flatMap((a) =>
-    a.submissions.map((s, i) => ({
-      ...s,
-      assignmentTitle: a.title,
-      assignmentId: a.id,
-      index: i
-    }))
-  );
-
+  // 🔥 Filtering (FIXED)
   const filtered = allSubmissions.filter((s) => {
     const matchesSearch =
-      s.student.toLowerCase().includes(search.toLowerCase()) ||
-      s.assignmentTitle.toLowerCase().includes(search.toLowerCase());
+      (s.fileName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (s.assignmentTitle || "").toLowerCase().includes(search.toLowerCase());
 
     const matchesFilter =
       filter === "all" ||
       (filter === "pending" && s.score == null) ||
-(filter === "graded" && s.score != null);
+      (filter === "graded" && s.score != null);
 
     return matchesSearch && matchesFilter;
   });
 
   const total = allSubmissions.length;
-const pending = allSubmissions.filter((s) => s.score == null).length;
-const graded = allSubmissions.filter((s) => s.score != null).length;
+  const pending = allSubmissions.filter((s) => s.score == null).length;
+  const graded = allSubmissions.filter((s) => s.score != null).length;
+
+  // TEMP grading
+  const handleGrade = () => {
+    alert("Grading feature will be added in backend next");
+  };
 
   return (
     <div className="submissions-container">
-
       <h2>Submissions</h2>
-      <p className="sub-text">Review and grade student submissions</p>
+      <p className="sub-text">Review student submissions</p>
 
       {/* SEARCH + FILTER */}
       <div className="submission-controls">
         <input
           type="text"
-          placeholder="Search by student or assignment..."
+          placeholder="Search by file or assignment..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <div className="filter-buttons">
-          <button
-            className={filter === "all" ? "active" : ""}
-            onClick={() => setFilter("all")}
-          >
-            All
-          </button>
-          <button
-            className={filter === "pending" ? "active" : ""}
-            onClick={() => setFilter("pending")}
-          >
-            Pending
-          </button>
-          <button
-            className={filter === "graded" ? "active" : ""}
-            onClick={() => setFilter("graded")}
-          >
-            Graded
-          </button>
+          <button onClick={() => setFilter("all")}>All</button>
+          <button onClick={() => setFilter("pending")}>Pending</button>
+          <button onClick={() => setFilter("graded")}>Graded</button>
         </div>
       </div>
 
@@ -119,11 +88,13 @@ const graded = allSubmissions.filter((s) => s.score != null).length;
           <h3>{total}</h3>
           <p>Total Submissions</p>
         </div>
-        <div className="stat-card warning">
+
+        <div className="stat-card">
           <h3>{pending}</h3>
-          <p>Pending Review</p>
+          <p>Pending</p>
         </div>
-        <div className="stat-card success">
+
+        <div className="stat-card">
           <h3>{graded}</h3>
           <p>Graded</p>
         </div>
@@ -131,55 +102,63 @@ const graded = allSubmissions.filter((s) => s.score != null).length;
 
       {/* LIST */}
       {filtered.length === 0 ? (
-        <div className="empty-state">
-          <h3>No submissions found</h3>
-        </div>
+        <p>No submissions found</p>
       ) : (
-        filtered.map((s, idx) => (
-          <div key={idx} className="submission-card">
+        filtered.map((s) => (
+          <div key={s.id} className="submission-card">
 
-            <div className="submission-top">
-              <div>
-                <h3>{s.student}</h3>
-                <p className="assignment-name">
-                  {s.assignmentTitle}
-                </p>
-              </div>
+            <h3>Student ID: {s.studentId}</h3>
+            <p>Assignment: {s.assignmentTitle}</p>
 
-              {s.score==null ? (
-                <span className="status-pill pending">
-                  Pending
-                </span>
-              ) : (
-                <span className="status-pill graded">
-                  Graded
-                </span>
-              )}
-            </div>
+            {/* 🔥 SHOW FILE NAME */}
+            <p><strong>File:</strong> {s.fileName || "Not available"}</p>
 
             <div className="submission-actions">
-              <button className="primary">
-                View Submission
+
+              {/* VIEW */}
+              <button
+                onClick={() => {
+                  if (!s.fileName) {
+                    alert("File not available");
+                    return;
+                  }
+
+                  window.open(
+                    `http://localhost:8080/files/${encodeURIComponent(s.fileName)}`,
+                    "_blank"
+                  );
+                }}
+              >
+                View
               </button>
 
-              <button className="secondary">
+              {/* DOWNLOAD */}
+              <button
+                onClick={() => {
+                  if (!s.fileName) {
+                    alert("File not available");
+                    return;
+                  }
+
+                  const link = document.createElement("a");
+                  link.href = `http://localhost:8080/files/${encodeURIComponent(s.fileName)}`;
+                  link.download = s.fileName;
+                  link.click();
+                }}
+              >
                 Download
               </button>
 
-             {s.score == null ? (
-  <button
-  className="grade-btn"
-  onClick={() => setActiveTab("grades")}
->
-  Grade Now
-</button>
-) : (
-  <div className="score-display">
-    {s.score}
-  </div>
-)}
-            </div>
+              {/* GRADE */}
+             <button
+                onClick={() => {
+                  if (onGrade) onGrade(s);
+                }}
+              >
+                Grade
+              </button>
 
+            </div>
           </div>
         ))
       )}

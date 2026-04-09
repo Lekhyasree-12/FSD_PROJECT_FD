@@ -1,65 +1,112 @@
 import { useEffect, useState } from "react";
 import "./TeacherDashboard.css";
 
-function TeacherGrades() {
+function TeacherGrades({ selectedSubmission }) {
   const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [search, setSearch] = useState("");
-const [gradeInputs, setGradeInputs] = useState({});
-const [feedbackInputs, setFeedbackInputs] = useState({});
+  const [gradeInputs, setGradeInputs] = useState({});
+  const [feedbackInputs, setFeedbackInputs] = useState({});
+
   useEffect(() => {
-  const storedSubjects =
-    JSON.parse(localStorage.getItem("subjects")) || [];
+    loadData();
+    if (selectedSubmission) {
+      setSearch(selectedSubmission.studentId ? String(selectedSubmission.studentId) : "");
+    }
+  }, [selectedSubmission]);
 
-  const allAssignments = storedSubjects.flatMap((subject) =>
-    (subject.assignments || []).map((assignment) => ({
-      ...assignment,
-      subject: subject.name,
-      subjectId: subject.id
-    }))
-  );
+  const loadData = () => {
+    fetch("http://localhost:8080/assignments")
+      .then(res => res.json())
+      .then(data => setAssignments(data))
+      .catch(err => console.error(err));
 
-  setAssignments(allAssignments);
-}, []);
+    fetch("http://localhost:8080/submissions")
+      .then(res => res.json())
+      .then(data => setSubmissions(data))
+      .catch(err => console.error(err));
+  };
+
+  const handleGrade = (submissionId) => {
+    const grade = gradeInputs[submissionId];
+    const feedback = feedbackInputs[submissionId];
+
+    if (!grade) {
+      alert("Please enter a valid score");
+      return;
+    }
+
+    fetch(`http://localhost:8080/submissions/${submissionId}/grade`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        score: Number(grade),
+        feedback: feedback
+      })
+    })
+      .then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Status ${res.status}: ${text}`);
+        }
+        return res.text();
+      })
+      .then(() => {
+        alert("Grade saved successfully!");
+        setGradeInputs(prev => ({ ...prev, [submissionId]: "" }));
+        setFeedbackInputs(prev => ({ ...prev, [submissionId]: "" }));
+        loadData(); // Refresh UI
+      })
+      .catch(err => {
+        console.error("Grading error:", err);
+        alert("Failed to grade. Backend says: " + err.message);
+      });
+  };
+
+  // Combine data
+  const allData = submissions.map(s => {
+    const assignment = assignments.find(a => a.id === s.assignmentId);
+    return {
+      ...s,
+      assignmentTitle: assignment ? assignment.title : "Unknown Assignment"
+    };
+  });
+
+  const filtered = allData.filter((s) => {
+    if (!search) return true;
+    const sId = s.studentId ? String(s.studentId).toLowerCase() : "";
+    const aTit = s.assignmentTitle ? s.assignmentTitle.toLowerCase() : "";
+    const q = search.toLowerCase();
+    return sId.includes(q) || aTit.includes(q);
+  });
+
+  const gradedStudents = allData.filter(s => s.score != null);
   
-
-  // Collect all graded submissions
-  const students = assignments.flatMap((a) =>
-    a.submissions
-      .filter((s) => s.score!=null)
-      .map((s) => ({
-        name: s.student,
-        id: s.student?.slice(-4),
-        score: s.score
-      }))
-  );
-
-  const filtered = students.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   const average =
-    students.length > 0
+    gradedStudents.length > 0
       ? Math.round(
-          students.reduce((sum, s) => sum + s.score, 0) /
-            students.length
+          gradedStudents.reduce((sum, s) => sum + s.score, 0) /
+            gradedStudents.length
         )
       : 0;
 
   const highest =
-    students.length > 0
-      ? Math.max(...students.map((s) => s.score))
+    gradedStudents.length > 0
+      ? Math.max(...gradedStudents.map((s) => s.score))
       : 0;
 
   const lowest =
-    students.length > 0
-      ? Math.min(...students.map((s) => s.score))
+    gradedStudents.length > 0
+      ? Math.min(...gradedStudents.map((s) => s.score))
       : 0;
 
   const passRate =
-    students.length > 0
+    gradedStudents.length > 0
       ? Math.round(
-          (students.filter((s) => s.score >= 40).length /
-            students.length) *
+          (gradedStudents.filter((s) => s.score >= 40).length /
+            gradedStudents.length) *
             100
         )
       : 0;
@@ -73,35 +120,13 @@ const [feedbackInputs, setFeedbackInputs] = useState({});
   };
 
   const distribution = {
-    A: students.filter((s) => s.score >= 90).length,
-    B: students.filter((s) => s.score >= 80 && s.score < 90).length,
-    C: students.filter((s) => s.score >= 70 && s.score < 80).length,
-    D: students.filter((s) => s.score >= 60 && s.score < 70).length,
-    F: students.filter((s) => s.score < 60).length
+    A: gradedStudents.filter((s) => s.score >= 90).length,
+    B: gradedStudents.filter((s) => s.score >= 80 && s.score < 90).length,
+    C: gradedStudents.filter((s) => s.score >= 70 && s.score < 80).length,
+    D: gradedStudents.filter((s) => s.score >= 60 && s.score < 70).length,
+    F: gradedStudents.filter((s) => s.score < 60).length
   };
-const handleGrade = (assignmentId, studentEmail, grade, feedback) => {
 
-  const updated = assignments.map((a) => {
-    if (a.id === assignmentId) {
-      return {
-        ...a,
-        submissions: a.submissions.map((s) =>
-          s.student === studentEmail
-            ? {
-                ...s,
-                score: Number(grade),
-                feedback: feedback
-              }
-            : s
-        )
-      };
-    }
-    return a;
-  });
-
-  setAssignments(updated);
-  localStorage.setItem("assignments", JSON.stringify(updated));
-};
   return (
     <div className="grades-container">
 
@@ -109,70 +134,62 @@ const handleGrade = (assignmentId, studentEmail, grade, feedback) => {
       <p className="sub-text">
         View and manage student grades
       </p>
+
       {/* GRADING SECTION */}
-{assignments.length === 0 ? (
-  <p>No assignments available.</p>
-) : assignments.every(a => a.submissions.length === 0) ? (
-  <p>No student submissions available to grade.</p>
-) : (
-  assignments.map((a) =>
-    a.submissions.map((s) => (
-      <div key={a.id + s.student} className="assignment-card">
+      {filtered.length === 0 ? (
+        <p>No student submissions found matching criteria.</p>
+      ) : (
+        filtered.map((s) => (
+          <div key={s.id} className="assignment-card">
 
-        <p><strong>Assignment:</strong> {a.title}</p>
-        <p><strong>Student:</strong> {s.student}</p>
-<span className={`grade-badge ${s.score != null ? "graded" : "pending"}`}>
-  {s.score != null ? "Graded" : "Pending"}
-</span>
-        <input
-  type="number"
-  placeholder="Enter Grade"
-  value={gradeInputs[`${a.id}-${s.student}`] || ""}
-  onChange={(e) =>
-    setGradeInputs({
-      ...gradeInputs,
-      [`${a.id}-${s.student}`]: e.target.value
-    })
-  }
-/>
+            <p><strong>Assignment:</strong> {s.assignmentTitle}</p>
+            <p><strong>Student ID:</strong> {s.studentId}</p>
 
-<textarea
-  placeholder="Write feedback..."
-  value={feedbackInputs[`${a.id}-${s.student}`] || ""}
-  onChange={(e) =>
-    setFeedbackInputs({
-      ...feedbackInputs,
-      [`${a.id}-${s.student}`]: e.target.value
-    })
-  }
-  rows="3"
-/>
+            <span className={`grade-badge ${s.score != null ? "graded" : "pending"}`}>
+              {s.score != null ? "Graded" : "Pending"}
+            </span>
 
-<button
-  onClick={() =>
-    handleGrade(
-      a.id,
-      s.student,
-      gradeInputs[`${a.id}-${s.student}`],
-      feedbackInputs[`${a.id}-${s.student}`]
-    )
-  }
->
-  Save Grade
-</button>
+            <input
+              type="number"
+              placeholder="Enter Grade"
+              value={gradeInputs[s.id] || ""}
+              onChange={(e) =>
+                setGradeInputs({
+                  ...gradeInputs,
+                  [s.id]: e.target.value
+                })
+              }
+            />
 
-<p><strong>Current Grade:</strong> {s.score ?? "Not graded"}</p>
-<p><strong>Feedback:</strong> {s.feedback ?? "No feedback yet"}</p>
-      </div>
-    ))
-  )
-)}
+            <textarea
+              placeholder="Write feedback..."
+              value={feedbackInputs[s.id] || ""}
+              onChange={(e) =>
+                setFeedbackInputs({
+                  ...feedbackInputs,
+                  [s.id]: e.target.value
+                })
+              }
+              rows="3"
+            />
 
-      {/* CLASS OVERVIEW */}
+            <button
+              onClick={() => handleGrade(s.id)}
+            >
+              Save Grade
+            </button>
+
+            <p><strong>Current Grade:</strong> {s.score ?? "Not graded"}</p>
+
+          </div>
+        ))
+      )}
+
+      {/* OVERVIEW */}
       <div className="overview-card">
         <div className="overview-stat">
-          <span>Students</span>
-          <h3>{students.length}</h3>
+          <span>Graded Students</span>
+          <h3>{gradedStudents.length}</h3>
         </div>
         <div className="overview-stat">
           <span>Average</span>
@@ -196,7 +213,7 @@ const handleGrade = (assignmentId, studentEmail, grade, feedback) => {
       <div className="grades-controls">
         <input
           type="text"
-          placeholder="Search students..."
+          placeholder="Search students or assignments..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -207,20 +224,18 @@ const handleGrade = (assignmentId, studentEmail, grade, feedback) => {
         <table>
           <thead>
             <tr>
-              <th>Student</th>
-              <th>ID</th>
+              <th>Student ID</th>
+              <th>Assignment</th>
               <th>Score</th>
-              <th>Average</th>
               <th>Grade</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((s, idx) => (
+            {gradedStudents.map((s, idx) => (
               <tr key={idx}>
-                <td>{s.name}</td>
-                <td>{s.id}</td>
+                <td>{s.studentId}</td>
+                <td>{s.assignmentTitle}</td>
                 <td>{s.score}</td>
-                <td>{s.score}%</td>
                 <td>{getLetter(s.score)}</td>
               </tr>
             ))}

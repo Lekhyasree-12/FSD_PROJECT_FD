@@ -11,61 +11,95 @@ function Login({ setRole }) {
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
 
+  // ================= MAIN HANDLER =================
   const handleAuth = () => {
     if (!email || !password) {
       alert("Please fill all fields");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
-
-    // ================= SIGN UP =================
     if (isSignUp) {
-      const userExists = users.find((u) => u.email === email);
-      if (userExists) {
-        alert("User already exists");
-        return;
-      }
-
-      const newUser = {
-        email,
-        password,
-        role: selectedRole,
-      };
-
-      const updatedUsers = [...users, newUser];
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-
-      localStorage.setItem("loggedInUser", email);
-      localStorage.setItem("role", selectedRole);
-
-      // 🔥 Update App state immediately
-      setRole(selectedRole);
-
-      navigate(`/${selectedRole}`);
-      return;
+      registerUser();
+    } else {
+      loginUser();
     }
+  };
 
-    // ================= SIGN IN =================
-    const user = users.find(
-      (u) =>
-        u.email === email &&
-        u.password === password &&
-        u.role === selectedRole
-    );
+  // ================= REGISTER =================
+  const registerUser = () => {
+    fetch("http://localhost:8080/users/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: email,
+        email: email,
+        password: password,
+        role: selectedRole.toUpperCase()
+      })
+    })
+      .then(res => res.json())
+      .then(user => {
+        console.log("REGISTERED:", user);
+        alert("Account created successfully!");
 
-    if (!user) {
-      alert("Invalid credentials");
-      return;
-    }
+        // 🔥 directly navigate after register
+        localStorage.setItem("loggedInUser", user.email);
+        localStorage.setItem("role", user.role.toLowerCase());
 
-    localStorage.setItem("loggedInUser", email);
-    localStorage.setItem("role", selectedRole);
+        setRole(user.role.toLowerCase());
 
-    // 🔥 Update App state immediately
-    setRole(selectedRole);
+        navigate(`/${user.role.toLowerCase()}`);
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Registration failed");
+      });
+  };
 
-    navigate(`/${selectedRole}`);
+  // ================= LOGIN =================
+  const loginUser = () => {
+    fetch("http://localhost:8080/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
+    })
+      .then(res => res.text())
+      .then(text => {
+        console.log("RAW RESPONSE:", text);
+
+        if (!text || text === "null") {
+          alert("Invalid email or password");
+          return;
+        }
+
+        const user = JSON.parse(text);
+
+        // 🔥 ROLE CHECK (IMPORTANT)
+        if (user.role.toLowerCase() !== selectedRole) {
+          alert(`You are registered as ${user.role}`);
+          return;
+        }
+
+        console.log("LOGIN SUCCESS:", user);
+
+        localStorage.setItem("loggedInUser", user.email);
+        localStorage.setItem("role", user.role.toLowerCase());
+
+        setRole(user.role.toLowerCase());
+
+        navigate(`/${user.role.toLowerCase()}`);
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Login failed");
+      });
   };
 
   return (
@@ -77,16 +111,14 @@ function Login({ setRole }) {
 
       <div className="login-card">
         <h1>{isSignUp ? "Sign Up" : "Sign In"}</h1>
+
         <p className="subtitle">
-          {isSignUp
-            ? "Create your account to get started"
-            : "Access your dashboard and manage your work"}
+          {isSignUp ? "Create your account" : "Login to continue"}
         </p>
 
         <label>I am a:</label>
         <div className="role-toggle">
           <button
-            type="button"
             className={selectedRole === "student" ? "active" : ""}
             onClick={() => setSelectedRole("student")}
           >
@@ -94,7 +126,6 @@ function Login({ setRole }) {
           </button>
 
           <button
-            type="button"
             className={selectedRole === "teacher" ? "active" : ""}
             onClick={() => setSelectedRole("teacher")}
           >
@@ -102,7 +133,6 @@ function Login({ setRole }) {
           </button>
 
           <button
-            type="button"
             className={selectedRole === "admin" ? "active" : ""}
             onClick={() => setSelectedRole("admin")}
           >
@@ -110,10 +140,9 @@ function Login({ setRole }) {
           </button>
         </div>
 
-        <label>Email Address</label>
+        <label>Email</label>
         <input
           type="email"
-          placeholder="your.email@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -121,23 +150,19 @@ function Login({ setRole }) {
         <label>Password</label>
         <input
           type="password"
-          placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
-          type="button"
-          className="login-btn"
-          onClick={handleAuth}
-        >
-          {isSignUp ? "Create Account" : "Sign In"}
+        <button className="login-btn" onClick={handleAuth}>
+          {isSignUp ? "Create Account" : "Login"}
         </button>
 
         <p className="signup-text">
           {isSignUp
             ? "Already have an account?"
             : "Don't have an account?"}
+
           <span onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp ? " Sign In" : " Sign Up"}
           </span>

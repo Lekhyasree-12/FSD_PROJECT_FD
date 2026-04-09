@@ -8,15 +8,33 @@ import TeacherGrades from "./TeacherGrades";
 function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
+  const [activeSubmission, setActiveSubmission] = useState(null);
   const navigate = useNavigate();
 
-  // Load assignments
+  // 🔥 Load assignments and submissions from backend
+  const loadData = () => {
+    fetch("http://localhost:8080/assignments")
+      .then(res => res.json())
+      .then(data => setAssignments(data))
+      .catch(err => console.error(err));
+
+    fetch("http://localhost:8080/submissions")
+      .then(res => res.json())
+      .then(data => setSubmissions(data))
+      .catch(err => console.error(err));
+  };
+
   useEffect(() => {
-    const savedAssignments = localStorage.getItem("assignments");
-    if (savedAssignments) {
-      setAssignments(JSON.parse(savedAssignments));
-    }
+    loadData();
   }, []);
+
+  // 🔥 Reload when coming back to dashboard
+  useEffect(() => {
+    if (activeTab === "dashboard") {
+      loadData();
+    }
+  }, [activeTab]);
 
   const handleLogout = () => {
     localStorage.removeItem("loggedInUser");
@@ -73,11 +91,10 @@ function TeacherDashboard() {
           <>
             <div className="dashboard-header">
               <h1>Welcome back 👋</h1>
-              <p>
-                Here's what's happening in your classes today
-              </p>
+              <p>Here's what's happening in your classes today</p>
             </div>
 
+            {/* ===== STATS ===== */}
             <div className="teacher-stats">
               <div className="stat-card">
                 <div>
@@ -88,23 +105,49 @@ function TeacherDashboard() {
 
               <div className="stat-card">
                 <div>
-                  <h3>
-                    {assignments.reduce(
-                      (t, a) => t + a.submissions.length,
-                      0
-                    )}
-                  </h3>
+                  <h3>{submissions.length}</h3>
                   <p>Total Submissions</p>
                 </div>
               </div>
+            </div>
+
+            {/* 🔥 NEW: SHOW ASSIGNMENTS LIST */}
+            <div style={{ marginTop: "20px" }}>
+              <h2>All Assignments</h2>
+
+              {assignments.length === 0 ? (
+                <p>No assignments available</p>
+              ) : (
+                assignments.map((a) => (
+                  <div
+                    key={a.id}
+                    style={{
+                      padding: "10px",
+                      margin: "10px 0",
+                      border: "1px solid #ccc",
+                      borderRadius: "8px"
+                    }}
+                  >
+                    <h4>{a.title}</h4>
+                    <p>{a.description}</p>
+                  </div>
+                ))
+              )}
             </div>
           </>
         )}
 
         {/* ===== OTHER TABS ===== */}
         {activeTab === "create" && <TeacherCreate />}
-        {activeTab === "submissions" && <TeacherSubmissions />}
-        {activeTab === "grades" && <TeacherGrades />}
+        {activeTab === "submissions" && (
+          <TeacherSubmissions
+            onGrade={(submission) => {
+              setActiveSubmission(submission);
+              setActiveTab("grades");
+            }}
+          />
+        )}
+        {activeTab === "grades" && <TeacherGrades selectedSubmission={activeSubmission} />}
       </div>
     </div>
   );

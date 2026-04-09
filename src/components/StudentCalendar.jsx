@@ -3,22 +3,28 @@ import "./StudentCalendar.css";
 
 function StudentCalendar() {
   const [assignments, setAssignments] = useState([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Start from Jan 2026
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 0, 1));
-
+  // 🔥 LOAD ASSIGNMENTS (AUTO REFRESH)
   useEffect(() => {
-    const storedSubjects =
-      JSON.parse(localStorage.getItem("subjects")) || [];
+    const loadAssignments = () => {
+      fetch("http://localhost:8080/assignments")
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Assignments:", data); // debug
+          setAssignments(data);
+        })
+        .catch((err) =>
+          console.error("Error fetching assignments:", err)
+        );
+    };
 
-    const allAssignments = storedSubjects.flatMap((subject) =>
-      (subject.assignments || []).map((assignment) => ({
-        ...assignment,
-        subject: subject.name
-      }))
-    );
+    loadAssignments();
 
-    setAssignments(allAssignments);
+    // 🔥 Auto refresh every 3 sec
+    const interval = setInterval(loadAssignments, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const year = currentDate.getFullYear();
@@ -36,9 +42,16 @@ function StudentCalendar() {
     today.getFullYear() === year &&
     today.getMonth() === month;
 
+  // 🔥 FIXED DATE PARSING
   const getAssignmentsForDay = (day) => {
     return assignments.filter((a) => {
-      const date = new Date(a.deadline || a.dueDate);
+      const rawDate = a.deadline || a.dueDate;
+
+      if (!rawDate) return false;
+
+      // 🔥 FIX: avoid timezone issues
+      const date = new Date(rawDate + "T00:00:00");
+
       return (
         date.getFullYear() === year &&
         date.getMonth() === month &&
@@ -48,25 +61,23 @@ function StudentCalendar() {
   };
 
   const goToPreviousMonth = () => {
-    if (month > 0) {
-      setCurrentDate(new Date(year, month - 1, 1));
-    }
+    setCurrentDate(new Date(year, month - 1, 1));
   };
 
   const goToNextMonth = () => {
-    if (month < 11) {
-      setCurrentDate(new Date(year, month + 1, 1));
-    }
+    setCurrentDate(new Date(year, month + 1, 1));
   };
 
   const calendarDays = [];
 
-  // Empty cells before first day
+  // Empty cells
   for (let i = 0; i < firstDayOfMonth; i++) {
-    calendarDays.push(<div key={`empty-${i}`} className="day-cell empty"></div>);
+    calendarDays.push(
+      <div key={`empty-${i}`} className="day-cell empty"></div>
+    );
   }
 
-  // Actual days
+  // Days
   for (let day = 1; day <= daysInMonth; day++) {
     const dayAssignments = getAssignmentsForDay(day);
 
@@ -81,11 +92,7 @@ function StudentCalendar() {
 
         <div className="day-events">
           {dayAssignments.map((a) => (
-            <div
-              key={a.id}
-              className="event-pill"
-              style={{ backgroundColor: "#3b82f6" }}
-            >
+            <div key={a.id} className="event-pill">
               {a.title}
             </div>
           ))}
@@ -98,29 +105,32 @@ function StudentCalendar() {
     <div className="calendar-page">
       <header className="page-header">
         <h1>Calendar</h1>
-        <p>View your schedule and upcoming events</p>
+        <p>View your assignments schedule</p>
       </header>
 
       <div className="calendar-layout">
         <section className="calendar-main">
           <div className="calendar-card">
+
+            {/* NAVIGATION */}
             <div className="calendar-nav">
               <button onClick={goToPreviousMonth}>◀</button>
-              <h2>
-                {monthName} {year}
-              </h2>
+              <h2>{monthName} {year}</h2>
               <button onClick={goToNextMonth}>▶</button>
             </div>
 
+            {/* WEEKDAYS */}
             <div className="weekday-header">
               {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                 <div key={d}>{d}</div>
               ))}
             </div>
 
+            {/* CALENDAR GRID */}
             <div className="calendar-grid">
               {calendarDays}
             </div>
+
           </div>
         </section>
       </div>

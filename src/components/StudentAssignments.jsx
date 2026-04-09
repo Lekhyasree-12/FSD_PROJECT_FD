@@ -3,196 +3,180 @@ import "./StudentAssignments.css";
 
 function StudentAssignments() {
   const [assignments, setAssignments] = useState([]);
-  const [filter, setFilter] = useState("All");
+  const [submissions, setSubmissions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const studentEmail = localStorage.getItem("loggedInUser");
+  const [selectedFiles, setSelectedFiles] = useState({});
 
-  // 🔥 Load assignments from subjects
-  useEffect(() => {
+  const studentId = 1;
+
+  // Load data
   const loadAssignments = () => {
-    const storedSubjects =
-      JSON.parse(localStorage.getItem("subjects")) || [];
-
-    const allAssignments = storedSubjects.flatMap((subject) =>
-      (subject.assignments || []).map((assignment) => ({
-        ...assignment,
-        subject: subject.name,
-        subjectId: subject.id
-      }))
-    );
-
-    setAssignments(allAssignments);
+    fetch("http://localhost:8080/assignments")
+      .then(res => res.json())
+      .then(data => setAssignments(data));
   };
 
-  loadAssignments();
-
-  // Listen for storage updates
-  window.addEventListener("storage", loadAssignments);
-
-  return () => {
-    window.removeEventListener("storage", loadAssignments);
-  };
-}, []);
-
-  // Determine assignment status
-  const getStatus = (a) => {
-    const submitted = a.submissions?.some(
-      (s) => s.student === studentEmail
-    );
-
-    if (submitted) return "Submitted";
-
-    const isOverdue = new Date(a.deadline || a.dueDate) < new Date();
-    return isOverdue ? "Overdue" : "Pending";
+  const loadSubmissions = () => {
+    fetch("http://localhost:8080/submissions")
+      .then(res => res.json())
+      .then(data => setSubmissions(data));
   };
 
-  // Submit assignment
-  const handleSubmit = (id, subjectId) => {
-    const storedSubjects =
-      JSON.parse(localStorage.getItem("subjects")) || [];
+  useEffect(() => {
+    loadAssignments();
+    loadSubmissions();
+  }, []);
 
-    const updatedSubjects = storedSubjects.map((subject) => {
-      if (subject.id === subjectId) {
-        const updatedAssignments = subject.assignments.map((a) => {
-          if (
-            a.id === id &&
-            !a.submissions?.some(
-              (s) => s.student === studentEmail
-            )
-          ) {
-            return {
-              ...a,
-              submissions: [
-                ...(a.submissions || []),
-                { student: studentEmail, grade: null }
-              ]
-            };
-          }
-          return a;
+  // File select
+  const handleFileChange = (assignmentId, file) => {
+    setSelectedFiles(prev => ({
+      ...prev,
+      [assignmentId]: file
+    }));
+  };
+
+  // 🔥 SUBMIT
+  const handleSubmit = (assignmentId) => {
+    const file = selectedFiles[assignmentId];
+
+    if (!file) {
+      alert("Select file first");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("studentId", studentId);
+    formData.append("assignmentId", assignmentId);
+
+    fetch("http://localhost:8080/submissions", {
+      method: "POST",
+      body: formData
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to submit");
+        return res.text();
+      })
+      .then(() => {
+        alert("Submitted!");
+        setSelectedFiles(prev => {
+          const updated = { ...prev };
+          delete updated[assignmentId];
+          return updated;
         });
-
-        return { ...subject, assignments: updatedAssignments };
-      }
-      return subject;
-    });
-
-    localStorage.setItem(
-      "subjects",
-      JSON.stringify(updatedSubjects)
-    );
-
-    // Reload assignments after submit
-    const refreshedAssignments = updatedSubjects.flatMap((subject) =>
-      (subject.assignments || []).map((assignment) => ({
-        ...assignment,
-        subject: subject.name,
-        subjectId: subject.id
-      }))
-    );
-
-    setAssignments(refreshedAssignments);
+        loadSubmissions();
+      })
+      .catch(err => console.error("Submit error:", err));
   };
 
-  // Filtering
-  const filteredAssignments = assignments.filter((a) => {
-    const status = getStatus(a);
-    const matchesFilter = filter === "All" || status === filter;
-    const matchesSearch = a.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    return matchesFilter && matchesSearch;
-  });
-
-  const stats = {
-    total: assignments.length,
-    pending: assignments.filter(
-      (a) => getStatus(a) === "Pending"
-    ).length,
-    submitted: assignments.filter(
-      (a) => getStatus(a) === "Submitted"
-    ).length,
-    overdue: assignments.filter(
-      (a) => getStatus(a) === "Overdue"
-    ).length
+  // 🔥 DELETE
+  const handleDelete = (submissionId) => {
+    fetch(`http://localhost:8080/submissions/${submissionId}`, {
+      method: "DELETE"
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to delete");
+        return res.text();
+      })
+      .then(() => {
+        alert("Deleted!");
+        loadSubmissions();
+      })
+      .catch(err => console.error("Delete error:", err));
   };
+
+  // 🔥 UPDATE (re-upload)
+  const handleUpdate = (submissionId, assignmentId) => {
+    const file = selectedFiles[assignmentId];
+
+    if (!file) {
+      alert("Select new file");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch(`http://localhost:8080/submissions/${submissionId}`, {
+      method: "PUT",
+      body: formData
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to update");
+        return res.text();
+      })
+      .then(() => {
+        alert("Updated!");
+        setSelectedFiles(prev => {
+          const updated = { ...prev };
+          delete updated[assignmentId];
+          return updated;
+        });
+        loadSubmissions();
+      })
+      .catch(err => console.error("Update error:", err));
+  };
+
+  const filteredAssignments = assignments.filter(a =>
+    a.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="assignments-container">
-      <header className="page-header">
-        <h1>Assignments</h1>
-        <p>View and manage all your course assignments</p>
-      </header>
+      <h1>Assignments</h1>
 
-      {/* Search & Filter */}
-      <div className="controls-row">
-        <input
-          type="text"
-          placeholder="Search assignments..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+      <input
+        type="text"
+        placeholder="Search..."
+        onChange={(e) => setSearchQuery(e.target.value)}
+      />
 
-        {["All", "Pending", "Submitted", "Overdue"].map((f) => (
-          <button
-            key={f}
-            className={filter === f ? "active" : ""}
-            onClick={() => setFilter(f)}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+      {filteredAssignments.map((a) => {
+        const submission = submissions.find(
+          (s) => s.assignmentId === a.id && s.studentId === studentId
+        );
 
-      {/* Stats */}
-      <div className="summary-stats">
-        <div>Total: {stats.total}</div>
-        <div>Pending: {stats.pending}</div>
-        <div>Submitted: {stats.submitted}</div>
-        <div>Overdue: {stats.overdue}</div>
-      </div>
+        return (
+          <div key={a.id} className="assignment-card">
+            <h3>{a.title}</h3>
+            <p>{a.description}</p>
 
-      {/* Assignment List */}
-      <div className="assignment-list">
-        {filteredAssignments.length === 0 ? (
-          <p>No assignments found.</p>
-        ) : (
-          filteredAssignments.map((a) => {
-            const status = getStatus(a);
+            {/* FILE INPUT ALWAYS AVAILABLE */}
+            <input
+              type="file"
+              onChange={(e) =>
+                handleFileChange(a.id, e.target.files[0])
+              }
+            />
 
-            return (
-              <div key={a.id} className="assignment-card">
-                <h3>
-                  {a.title}{" "}
-                  <span className={`badge ${status.toLowerCase()}`}>
-                    {status}
-                  </span>
-                </h3>
-
-                <p>{a.description}</p>
-
-                <p><strong>Subject:</strong> {a.subject}</p>
-                <p><strong>Points:</strong> {a.points}</p>
-                <p>
-                  <strong>Due:</strong>{" "}
-                  {a.deadline || a.dueDate}
-                </p>
+            {submission ? (
+              <>
+                <p>Submitted: {submission.fileName}</p>
 
                 <button
-                  disabled={status === "Submitted"}
                   onClick={() =>
-                    handleSubmit(a.id, a.subjectId)
+                    handleUpdate(submission.id, a.id)
                   }
                 >
-                  {status === "Submitted"
-                    ? "Submitted"
-                    : "Submit"}
+                  Update
                 </button>
-              </div>
-            );
-          })
-        )}
-      </div>
+
+                <button
+                  onClick={() =>
+                    handleDelete(submission.id)
+                  }
+                >
+                  Delete
+                </button>
+              </>
+            ) : (
+              <button onClick={() => handleSubmit(a.id)}>
+                Submit
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
