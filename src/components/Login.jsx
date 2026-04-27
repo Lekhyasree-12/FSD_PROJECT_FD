@@ -59,38 +59,28 @@ function Login() {
 
   // ================= LOGIN =================
   const loginUser = async () => {
-    try {
-      const user = await AuthAPI.login({
-        email: email,
-        password: password
-      });
+  try {
+    const user = await AuthAPI.login({
+      email: email,
+      password: password
+    });
 
-      if (!user) {
-        setError("Invalid email or password");
-        return;
-      }
+    console.log("LOGIN RESPONSE:", user);
 
-      if (!user.role) {
-        setError("Invalid user data");
-        return;
-      }
-
-      if (user.role.toLowerCase() !== selectedRole) {
-        setError(`You are registered as ${user.role}, not ${selectedRole}`);
-        return;
-      }
-
-      console.log("LOGIN SUCCESS:", user);
-
-      login({ id: user.email, role: user.role.toLowerCase() });
-
-      navigate(`/${user.role.toLowerCase()}`);
-
-    } catch (err) {
-      console.error(err);
-      setError("Login failed. Please check your credentials.");
+    if (!user) {
+      setError("Invalid email or password");
+      return;
     }
-  };
+
+    login({ id: user.email, role: user.role.toLowerCase() });
+
+    navigate(`/${user.role.toLowerCase()}`);
+
+  } catch (err) {
+    console.error(err);
+    setError("Login failed. Please check your credentials.");
+  }
+};
 
   return (
     <div className="login-page">
