@@ -35,9 +35,12 @@ export const AuthAPI = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
     });
+
     if (!response.ok) throw new Error("Login failed");
-    return await response.text();
+
+    return await response.json(); // ✅ IMPORTANT
   },
+
   register: async (userData) => {
     return fetchWithJSON("/users/register", {
       method: "POST",

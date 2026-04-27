@@ -17,7 +17,7 @@ function Login() {
 
   // ================= MAIN HANDLER =================
   const handleAuth = () => {
-    setError(""); // Clear previous errors
+    setError("");
 
     if (!email || !password) {
       setError("Please fill in all fields");
@@ -47,9 +47,10 @@ function Login() {
       });
 
       console.log("REGISTERED:", user);
-      
+
       login({ id: user.email, role: user.role.toLowerCase() });
       navigate(`/${user.role.toLowerCase()}`);
+
     } catch (err) {
       console.error(err);
       setError("Registration failed. Email might already exist.");
@@ -59,25 +60,18 @@ function Login() {
   // ================= LOGIN =================
   const loginUser = async () => {
     try {
-      const responseText = await AuthAPI.login({
+      const user = await AuthAPI.login({
         email: email,
         password: password
       });
 
-      if (!responseText || responseText === "null") {
+      if (!user) {
         setError("Invalid email or password");
         return;
       }
 
-      let user;
-      try {
-        user = typeof responseText === "string" ? JSON.parse(responseText) : responseText;
-      } catch(e) {
-        user = responseText;
-      }
-
-      if (!user || !user.role) {
-        setError("Invalid email or password");
+      if (!user.role) {
+        setError("Invalid user data");
         return;
       }
 
@@ -90,9 +84,8 @@ function Login() {
 
       login({ id: user.email, role: user.role.toLowerCase() });
 
-setTimeout(() => {
-  navigate(`/${user.role.toLowerCase()}`);
-}, 100);
+      navigate(`/${user.role.toLowerCase()}`);
+
     } catch (err) {
       console.error(err);
       setError("Login failed. Please check your credentials.");
@@ -147,7 +140,6 @@ setTimeout(() => {
             setEmail(e.target.value);
             setError("");
           }}
-          className={error && !email.includes("@") ? "input-error" : ""}
         />
 
         <label>Password</label>
@@ -158,7 +150,6 @@ setTimeout(() => {
             setPassword(e.target.value);
             setError("");
           }}
-          className={error && !password ? "input-error" : ""}
         />
 
         <button className="login-btn" onClick={handleAuth}>
