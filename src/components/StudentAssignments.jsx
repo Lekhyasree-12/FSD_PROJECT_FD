@@ -12,13 +12,13 @@ function StudentAssignments() {
 
   // Load data
   const loadAssignments = () => {
-    fetch("http://localhost:8080/assignments")
+    fetch("https://fsd-project-bd.onrender.com/assignments")
       .then(res => res.json())
       .then(data => setAssignments(data));
   };
 
   const loadSubmissions = () => {
-    fetch("http://localhost:8080/submissions")
+    fetch("https://fsd-project-bd.onrender.com/submissions")
       .then(res => res.json())
       .then(data => setSubmissions(data));
   };
@@ -50,7 +50,7 @@ function StudentAssignments() {
     formData.append("studentId", studentId);
     formData.append("assignmentId", assignmentId);
 
-    fetch("http://localhost:8080/submissions", {
+    fetch("https://fsd-project-bd.onrender.com/submissions", {
       method: "POST",
       body: formData
     })
@@ -76,7 +76,7 @@ function StudentAssignments() {
 
   // 🔥 DELETE
   const handleDelete = (submissionId, assignmentId) => {
-    fetch(`http://localhost:8080/submissions/${submissionId}`, {
+    fetch(`https://fsd-project-bd.onrender.com/submissions/${submissionId}`, {
       method: "DELETE"
     })
       .then(res => {
@@ -106,7 +106,7 @@ function StudentAssignments() {
     const formData = new FormData();
     formData.append("file", file);
 
-    fetch(`http://localhost:8080/submissions/${submissionId}`, {
+    fetch(`https://fsd-project-bd.onrender.com/submissions/${submissionId}`, {
       method: "PUT",
       body: formData
     })

@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://fsd-project-bd.onrender.com";
 
 /**
  * Helper function to handle standard JSON requests

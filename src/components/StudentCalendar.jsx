@@ -8,7 +8,7 @@ function StudentCalendar() {
   // 🔥 LOAD ASSIGNMENTS (AUTO REFRESH)
   useEffect(() => {
     const loadAssignments = () => {
-      fetch("http://localhost:8080/assignments")
+      fetch("https://fsd-project-bd.onrender.com/assignments")
         .then((res) => res.json())
         .then((data) => {
           console.log("Assignments:", data); // debug

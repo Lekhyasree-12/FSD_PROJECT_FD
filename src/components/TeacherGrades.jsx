@@ -16,12 +16,12 @@ function TeacherGrades({ selectedSubmission }) {
   }, [selectedSubmission]);
 
   const loadData = () => {
-    fetch("http://localhost:8080/assignments")
+    fetch("https://fsd-project-bd.onrender.com/assignments")
       .then(res => res.json())
       .then(data => setAssignments(data))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:8080/submissions")
+    fetch("https://fsd-project-bd.onrender.com/submissions")
       .then(res => res.json())
       .then(data => setSubmissions(data))
       .catch(err => console.error(err));
@@ -36,7 +36,7 @@ function TeacherGrades({ selectedSubmission }) {
       return;
     }
 
-    fetch(`http://localhost:8080/submissions/${submissionId}/grade`, {
+    fetch(`https://fsd-project-bd.onrender.com/submissions/${submissionId}/grade`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"

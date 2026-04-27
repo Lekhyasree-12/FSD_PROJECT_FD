@@ -124,7 +124,7 @@ function TeacherSubmissions({ onGrade }) {
                   }
 
                   window.open(
-                    `http://localhost:8080/files/${encodeURIComponent(s.fileName)}`,
+                    `https://fsd-project-bd.onrender.com/files/${encodeURIComponent(s.fileName)}`,
                     "_blank"
                   );
                 }}
@@ -141,7 +141,7 @@ function TeacherSubmissions({ onGrade }) {
                   }
 
                   const link = document.createElement("a");
-                  link.href = `http://localhost:8080/files/${encodeURIComponent(s.fileName)}`;
+                  link.href = `https://fsd-project-bd.onrender.com/files/${encodeURIComponent(s.fileName)}`;
                   link.download = s.fileName;
                   link.click();
                 }}

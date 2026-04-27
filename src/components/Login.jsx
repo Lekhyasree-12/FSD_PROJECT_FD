@@ -43,7 +43,7 @@ function Login() {
         name: email,
         email: email,
         password: password,
-        role: selectedRole.toUpperCase()
+        role: selectedRole
       });
 
       console.log("REGISTERED:", user);
@@ -89,7 +89,10 @@ function Login() {
       console.log("LOGIN SUCCESS:", user);
 
       login({ id: user.email, role: user.role.toLowerCase() });
-      navigate(`/${user.role.toLowerCase()}`);
+
+setTimeout(() => {
+  navigate(`/${user.role.toLowerCase()}`);
+}, 100);
     } catch (err) {
       console.error(err);
       setError("Login failed. Please check your credentials.");

@@ -30,7 +30,7 @@ function AdminDashboard() {
   }, []);
 
   const loadSubjects = () => {
-    fetch("http://localhost:8080/subjects")
+    fetch("https://fsd-project-bd.onrender.com/subjects")
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -49,7 +49,7 @@ function AdminDashboard() {
       return;
     }
 
-    fetch("http://localhost:8080/users/register", {
+    fetch("https://fsd-project-bd.onrender.com/users/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -78,7 +78,7 @@ function AdminDashboard() {
       return;
     }
 
-    fetch("http://localhost:8080/subjects", {
+    fetch("https://fsd-project-bd.onrender.com/subjects", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -96,7 +96,7 @@ function AdminDashboard() {
 
   // ================= DELETE SUBJECT =================
   const handleDelete = (id) => {
-    fetch(`http://localhost:8080/subjects/${id}`, {
+    fetch(`https://fsd-project-bd.onrender.com/subjects/${id}`, {
       method: "DELETE"
     })
       .then(() => {

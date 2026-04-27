@@ -7,12 +7,12 @@ function StudentGrades() {
   const studentId = 1; // Temporary static identity
 
   useEffect(() => {
-    fetch("http://localhost:8080/assignments")
+    fetch("https://fsd-project-bd.onrender.com/assignments")
       .then(res => res.json())
       .then(data => setAssignments(data))
       .catch(err => console.error(err));
 
-    fetch("http://localhost:8080/submissions")
+    fetch("https://fsd-project-bd.onrender.com/submissions")
       .then(res => res.json())
       .then(data => setSubmissions(data))
       .catch(err => console.error(err));
