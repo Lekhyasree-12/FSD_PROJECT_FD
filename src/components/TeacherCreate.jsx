@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { SubjectsAPI, AssignmentsAPI } from "../services/api";
 import "./TeacherDashboard.css";
 
 function TeacherCreate() {
@@ -10,79 +11,86 @@ function TeacherCreate() {
   const [dueDate, setDueDate] = useState("");
   const [points, setPoints] = useState(100);
 
-  // 🔥 LOAD SUBJECTS FROM BACKEND (FIXED)
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // LOAD SUBJECTS FROM API
   useEffect(() => {
-    fetch("http://localhost:8080/subjects")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Subjects:", data);
+    const loadSubjects = async () => {
+      try {
+        const data = await SubjectsAPI.getAll();
         setSubjects(data);
-      })
-      .catch((err) => console.error("Error loading subjects:", err));
+      } catch (err) {
+        console.error("Error loading subjects:", err);
+        setError("Failed to load subjects");
+      }
+    };
+    loadSubjects();
   }, []);
 
-  // ✅ CREATE ASSIGNMENT
-  const handlePublish = () => {
+  // CREATE ASSIGNMENT
+  const handlePublish = async () => {
+    setError("");
+    setSuccess("");
+
     if (!title || !selectedSubjectId || !dueDate) {
-      alert("Please fill all required fields");
+      setError("Please fill all required fields: Title, Subject, and Due Date.");
       return;
     }
 
-    fetch("http://localhost:8080/assignments", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    if (points <= 0) {
+      setError("Points must be greater than 0.");
+      return;
+    }
+
+    try {
+      await AssignmentsAPI.create({
         title,
         description,
         dueDate,
         points: Number(points),
-        subjectId: Number(selectedSubjectId) // 🔥 IMPORTANT FIX
-      })
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to create assignment");
-        return res.json();
-      })
-      .then(() => {
-        alert("Assignment Created Successfully!");
-
-        // 🔥 RESET FORM
-        setTitle("");
-        setDescription("");
-        setDueDate("");
-        setPoints(100);
-        setSelectedSubjectId("");
-
-        // 🔥 OPTIONAL: refresh dashboard
-        window.location.reload(); 
-      })
-      .catch((err) => {
-        console.error("ERROR:", err);
-        alert("Error creating assignment");
+        subjectId: Number(selectedSubjectId)
       });
+
+      setSuccess("Assignment Created Successfully!");
+
+      // RESET FORM
+      setTitle("");
+      setDescription("");
+      setDueDate("");
+      setPoints(100);
+      setSelectedSubjectId("");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      console.error("ERROR:", err);
+      setError("Failed to create assignment. Please try again.");
+    }
   };
 
   return (
     <div className="create-layout">
       <h2>Create Assignment</h2>
 
+      {error && <div className="error-message" style={{ marginBottom: "15px" }}>{error}</div>}
+      {success && <div className="success-message" style={{ padding: "12px", background: "rgba(34, 197, 94, 0.1)", color: "#16a34a", borderRadius: "8px", border: "1px solid rgba(34, 197, 94, 0.2)", marginBottom: "15px", fontWeight: "500" }}>{success}</div>}
+
       <label>Title *</label>
       <input
         type="text"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={(e) => { setTitle(e.target.value); setError(""); }}
+        className={error && !title ? "input-error" : ""}
       />
 
       <label>Subject *</label>
       <select
         value={selectedSubjectId}
-        onChange={(e) => setSelectedSubjectId(e.target.value)}
+        onChange={(e) => { setSelectedSubjectId(e.target.value); setError(""); }}
+        className={error && !selectedSubjectId ? "input-error" : ""}
       >
         <option value="">Select Subject</option>
-
-        {/* 🔥 BACKEND SUBJECTS */}
         {subjects.map((sub) => (
           <option key={sub.id} value={sub.id}>
             {sub.name}
@@ -100,14 +108,16 @@ function TeacherCreate() {
       <input
         type="date"
         value={dueDate}
-        onChange={(e) => setDueDate(e.target.value)}
+        onChange={(e) => { setDueDate(e.target.value); setError(""); }}
+        className={error && !dueDate ? "input-error" : ""}
       />
 
       <label>Points</label>
       <input
         type="number"
         value={points}
-        onChange={(e) => setPoints(e.target.value)}
+        onChange={(e) => { setPoints(e.target.value); setError(""); }}
+        className={error && points <= 0 ? "input-error" : ""}
       />
 
       <button onClick={handlePublish}>

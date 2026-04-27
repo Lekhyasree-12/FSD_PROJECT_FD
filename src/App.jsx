@@ -1,16 +1,16 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
 import Login from "./components/Login";
 import StudentDashboard from "./components/StudentDashboard";
 import TeacherDashboard from "./components/TeacherDashboard";
 import AdminDashboard from "./components/AdminDashboard";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const [role, setRole] = useState(localStorage.getItem("role"));
+  const { role } = useAuth();
 
   return (
     <Routes>
-      <Route path="/" element={<Login setRole={setRole} />} />
+      <Route path="/" element={<Login />} />
 
       <Route
         path="/student"

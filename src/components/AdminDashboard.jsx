@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./AdminDashboard.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function AdminDashboard() {
 
@@ -15,10 +16,11 @@ function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
 
+  const { logout } = useAuth();
+
   // 🔥 LOGOUT FUNCTION (ADDED)
   const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
-    localStorage.removeItem("role");
+    logout();
     navigate("/");
   };
 

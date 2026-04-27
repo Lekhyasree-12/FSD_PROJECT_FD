@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import StudentAssignments from "./StudentAssignments";
 import StudentGrades from "./StudentGrades";
 import StudentCalendar from "./StudentCalendar";
+import { useAuth } from "../context/AuthContext";
 import "./StudentDashboard.css";
 
 function StudentDashboard() {
@@ -50,8 +51,10 @@ function StudentDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const { logout } = useAuth();
+
   const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
+    logout();
     navigate("/");
   };
 
@@ -142,14 +145,14 @@ function StudentDashboard() {
               </div>
 
               {/* 🔥 Assignment List WITH SUBJECT */}
-              <section>
+              <section className="assignments-list-card">
                 <h2>Assignments</h2>
 
                 {assignments.length === 0 ? (
                   <p>No assignments available</p>
                 ) : (
                   assignments.map((a) => (
-                    <div key={a.id} style={{ border: "1px solid #ccc", margin: "10px", padding: "10px" }}>
+                    <div key={a.id} className="assignment-list-item">
                       <h4>{a.title}</h4>
 
                       {/* 🔥 SUBJECT NAME ADDED */}

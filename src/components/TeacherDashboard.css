@@ -13,7 +13,10 @@
 .teacher-container {
   display: flex;
   min-height: 100vh;
-  background-color: var(--main-bg);
+  background-image: url('/dashboard_bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
 }
 
 .teacher-sidebar {
@@ -23,12 +26,22 @@
   padding: 24px;
   display: flex;
   flex-direction: column;
+  margin: 16px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  height: calc(100vh - 32px);
+  z-index: 10;
 }
 
 .teacher-main {
   flex: 1;
   padding: 32px;
   overflow-y: auto;
+  background-color: transparent;
+  backdrop-filter: none;
+  margin: 16px 16px 16px 0;
+  border-radius: 24px;
+  box-shadow: none;
 }
 
 /* ========== SIDEBAR ========== */
@@ -70,6 +83,16 @@
 
 /* ========== HEADER ========== */
 
+.dashboard-header {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
+  margin-bottom: 24px;
+}
+
 .dashboard-header h1 {
   font-size: 28px;
   margin-bottom: 6px;
@@ -77,7 +100,7 @@
 
 .dashboard-header p {
   color: var(--text-muted);
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 /* ========== STATS ROW ========== */
@@ -90,15 +113,30 @@
 }
 
 .stat-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.85);
   padding: 24px;
   border-radius: 20px;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  transition: 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+}
+
+.stat-card h3 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: var(--sidebar-bg);
+}
+
+.stat-card p {
+  color: var(--text-muted);
+  font-weight: 500;
+  margin: 0;
 }
 
 .stat-card:hover {
@@ -131,12 +169,48 @@
 
 /* ========== LEFT COLUMN ========== */
 
+/* Assignment List Card on Dashboard */
+.assignments-list-card {
+  background: rgba(255, 255, 255, 0.85);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
+  margin-top: 24px;
+}
+
+.assignments-list-card h2 {
+  color: var(--sidebar-bg);
+  margin-bottom: 16px;
+}
+
+.assignment-list-item {
+  background: rgba(255, 255, 255, 0.6);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  transition: 0.2s;
+}
+
+.assignment-list-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.assignment-list-item h4 {
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
 .assignment-detail-card {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 24px;
   margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
 }
 
 .card-top {
@@ -189,10 +263,12 @@
 }
 
 .performance-card {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.85);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
 }
 
 .perf-row {
@@ -235,11 +311,13 @@
 /* ========== RIGHT COLUMN ========== */
 
 .side-column > div {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 24px;
   margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
 }
 
 /* Quick Actions */
@@ -280,10 +358,12 @@
 }
 
 .create-form-section {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 28px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
 }
 
 .sub-text {
@@ -359,7 +439,12 @@
 /* ===== SUBMISSIONS PAGE ===== */
 
 .submissions-container {
-  padding: 10px;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .submission-controls {
@@ -408,11 +493,13 @@
 }
 
 .submission-card {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
-  border: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
   margin-bottom: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  backdrop-filter: blur(8px);
 }
 
 .submission-top {
@@ -470,11 +557,14 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 20px;
-  background: linear-gradient(135deg,#4f46e5,#7c3aed);
-  padding: 20px;
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(11, 46, 51, 0.9), rgba(79, 124, 130, 0.9));
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 20px;
   color: white;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .overview-stat span {
@@ -496,10 +586,14 @@
 
 .grades-table table {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
-  border-radius: 16px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .grades-table th,
@@ -510,10 +604,13 @@
 }
 
 .distribution-card {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 20px;
+  margin-top: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 .distribution-grid {
@@ -538,20 +635,22 @@
   margin-top: 5px;
 }
 
-.green { background: #16a34a; }
-.blue { background: #2563eb; }
-.orange { background: #f97316; }
-.red { background: #ef4444; }
-.gray { background: #6b7280; }
+.green { background: rgba(22, 163, 74, 0.85); backdrop-filter: blur(4px); }
+.blue { background: rgba(37, 99, 235, 0.85); backdrop-filter: blur(4px); }
+.orange { background: rgba(249, 115, 22, 0.85); backdrop-filter: blur(4px); }
+.red { background: rgba(239, 68, 68, 0.85); backdrop-filter: blur(4px); }
+.gray { background: rgba(107, 114, 128, 0.85); backdrop-filter: blur(4px); }
 /* ===== INLINE GRADING SECTION ===== */
 
 .assignment-card {
-  background: white;
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  transition: 0.2s ease;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 24px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.05);
 }
 
 .assignment-card:hover {
@@ -661,10 +760,12 @@
 .create-layout {
   max-width: 700px;
   margin: 40px auto;
-  background: white;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
   padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
 }
@@ -709,4 +810,20 @@
 
 .create-layout button:hover {
   background: #3b6469;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideUp 0.3s ease;
+}
+
+.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
 }

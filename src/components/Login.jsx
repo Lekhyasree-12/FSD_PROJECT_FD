@@ -1,20 +1,31 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import "./Login.css";
 import logo from "./logo.png";
 
-function Login({ setRole }) {
+function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [selectedRole, setSelectedRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
+  const [error, setError] = useState("");
 
   // ================= MAIN HANDLER =================
   const handleAuth = () => {
+    setError(""); // Clear previous errors
+
     if (!email || !password) {
-      alert("Please fill all fields");
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address");
       return;
     }
 
@@ -26,80 +37,63 @@ function Login({ setRole }) {
   };
 
   // ================= REGISTER =================
-  const registerUser = () => {
-    fetch("http://localhost:8080/users/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+  const registerUser = async () => {
+    try {
+      const user = await AuthAPI.register({
         name: email,
         email: email,
         password: password,
         role: selectedRole.toUpperCase()
-      })
-    })
-      .then(res => res.json())
-      .then(user => {
-        console.log("REGISTERED:", user);
-        alert("Account created successfully!");
-
-        // 🔥 directly navigate after register
-        localStorage.setItem("loggedInUser", user.email);
-        localStorage.setItem("role", user.role.toLowerCase());
-
-        setRole(user.role.toLowerCase());
-
-        navigate(`/${user.role.toLowerCase()}`);
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Registration failed");
       });
+
+      console.log("REGISTERED:", user);
+      
+      login({ id: user.email, role: user.role.toLowerCase() });
+      navigate(`/${user.role.toLowerCase()}`);
+    } catch (err) {
+      console.error(err);
+      setError("Registration failed. Email might already exist.");
+    }
   };
 
   // ================= LOGIN =================
-  const loginUser = () => {
-    fetch("http://localhost:8080/users/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+  const loginUser = async () => {
+    try {
+      const responseText = await AuthAPI.login({
         email: email,
         password: password
-      })
-    })
-      .then(res => res.text())
-      .then(text => {
-        console.log("RAW RESPONSE:", text);
-
-        if (!text || text === "null") {
-          alert("Invalid email or password");
-          return;
-        }
-
-        const user = JSON.parse(text);
-
-        // 🔥 ROLE CHECK (IMPORTANT)
-        if (user.role.toLowerCase() !== selectedRole) {
-          alert(`You are registered as ${user.role}`);
-          return;
-        }
-
-        console.log("LOGIN SUCCESS:", user);
-
-        localStorage.setItem("loggedInUser", user.email);
-        localStorage.setItem("role", user.role.toLowerCase());
-
-        setRole(user.role.toLowerCase());
-
-        navigate(`/${user.role.toLowerCase()}`);
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Login failed");
       });
+
+      if (!responseText || responseText === "null") {
+        setError("Invalid email or password");
+        return;
+      }
+
+      let user;
+      try {
+        user = typeof responseText === "string" ? JSON.parse(responseText) : responseText;
+      } catch(e) {
+        user = responseText;
+      }
+
+      if (!user || !user.role) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      if (user.role.toLowerCase() !== selectedRole) {
+        setError(`You are registered as ${user.role}, not ${selectedRole}`);
+        return;
+      }
+
+      console.log("LOGIN SUCCESS:", user);
+
+      login({ id: user.email, role: user.role.toLowerCase() });
+      navigate(`/${user.role.toLowerCase()}`);
+    } catch (err) {
+      console.error(err);
+      setError("Login failed. Please check your credentials.");
+    }
   };
 
   return (
@@ -116,25 +110,27 @@ function Login({ setRole }) {
           {isSignUp ? "Create your account" : "Login to continue"}
         </p>
 
+        {error && <div className="error-message">{error}</div>}
+
         <label>I am a:</label>
         <div className="role-toggle">
           <button
             className={selectedRole === "student" ? "active" : ""}
-            onClick={() => setSelectedRole("student")}
+            onClick={() => { setSelectedRole("student"); setError(""); }}
           >
             Student
           </button>
 
           <button
             className={selectedRole === "teacher" ? "active" : ""}
-            onClick={() => setSelectedRole("teacher")}
+            onClick={() => { setSelectedRole("teacher"); setError(""); }}
           >
             Teacher
           </button>
 
           <button
             className={selectedRole === "admin" ? "active" : ""}
-            onClick={() => setSelectedRole("admin")}
+            onClick={() => { setSelectedRole("admin"); setError(""); }}
           >
             Admin
           </button>
@@ -144,14 +140,22 @@ function Login({ setRole }) {
         <input
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+          }}
+          className={error && !email.includes("@") ? "input-error" : ""}
         />
 
         <label>Password</label>
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError("");
+          }}
+          className={error && !password ? "input-error" : ""}
         />
 
         <button className="login-btn" onClick={handleAuth}>
@@ -163,7 +167,10 @@ function Login({ setRole }) {
             ? "Already have an account?"
             : "Don't have an account?"}
 
-          <span onClick={() => setIsSignUp(!isSignUp)}>
+          <span onClick={() => {
+            setIsSignUp(!isSignUp);
+            setError("");
+          }}>
             {isSignUp ? " Sign In" : " Sign Up"}
           </span>
         </p>

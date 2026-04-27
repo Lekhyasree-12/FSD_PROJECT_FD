@@ -4,6 +4,7 @@ import "./TeacherDashboard.css";
 import TeacherCreate from "./TeacherCreate";
 import TeacherSubmissions from "./TeacherSubmissions";
 import TeacherGrades from "./TeacherGrades";
+import { useAuth } from "../context/AuthContext";
 
 function TeacherDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -36,8 +37,10 @@ function TeacherDashboard() {
     }
   }, [activeTab]);
 
+  const { logout } = useAuth();
+
   const handleLogout = () => {
-    localStorage.removeItem("loggedInUser");
+    logout();
     navigate("/");
   };
 
@@ -45,43 +48,49 @@ function TeacherDashboard() {
     <div className="teacher-container">
 
       {/* ================= SIDEBAR ================= */}
-      <div className="teacher-sidebar">
-        <h2>GradeSphere</h2>
+      <aside className="sidebar">
+        <div className="sidebar-header">
+          <div className="logo-box">👨‍🏫</div>
+          <div>
+            <h3>Teacher</h3>
+            <p>Portal</p>
+          </div>
+        </div>
 
-        <ul>
+        <nav>
           <li
             className={activeTab === "dashboard" ? "active" : ""}
             onClick={() => setActiveTab("dashboard")}
           >
-            Dashboard
+            ⊞ Dashboard
           </li>
 
           <li
             className={activeTab === "create" ? "active" : ""}
             onClick={() => setActiveTab("create")}
           >
-            Create Assignment
+            ➕ Create Assignment
           </li>
 
           <li
             className={activeTab === "submissions" ? "active" : ""}
             onClick={() => setActiveTab("submissions")}
           >
-            Submissions
+            📥 Submissions
           </li>
 
           <li
             className={activeTab === "grades" ? "active" : ""}
             onClick={() => setActiveTab("grades")}
           >
-            Grades
+            🏅 Grades
           </li>
+        </nav>
 
-          <li className="logout" onClick={handleLogout}>
-            Logout
-          </li>
-        </ul>
-      </div>
+        <button className="logout-btn" onClick={handleLogout}>
+          🚪 Logout
+        </button>
+      </aside>
 
       {/* ================= MAIN CONTENT ================= */}
       <div className="teacher-main">
@@ -112,22 +121,14 @@ function TeacherDashboard() {
             </div>
 
             {/* 🔥 NEW: SHOW ASSIGNMENTS LIST */}
-            <div style={{ marginTop: "20px" }}>
+            <div className="assignments-list-card">
               <h2>All Assignments</h2>
 
               {assignments.length === 0 ? (
                 <p>No assignments available</p>
               ) : (
                 assignments.map((a) => (
-                  <div
-                    key={a.id}
-                    style={{
-                      padding: "10px",
-                      margin: "10px 0",
-                      border: "1px solid #ccc",
-                      borderRadius: "8px"
-                    }}
-                  >
+                  <div key={a.id} className="assignment-list-item">
                     <h4>{a.title}</h4>
                     <p>{a.description}</p>
                   </div>
