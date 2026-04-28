@@ -118,13 +118,8 @@ function TeacherSubmissions({ onGrade }) {
               {/* VIEW */}
               <button
                 onClick={() => {
-                  if (!s.fileName) {
-                    alert("File not available");
-                    return;
-                  }
-
                   window.open(
-                    `https://fsd-project-bd.onrender.com/files/${encodeURIComponent(s.fileName)}`,
+                    `https://fsd-project-bd.onrender.com/submissions/${s.id}/file`,
                     "_blank"
                   );
                 }}
@@ -135,14 +130,9 @@ function TeacherSubmissions({ onGrade }) {
               {/* DOWNLOAD */}
               <button
                 onClick={() => {
-                  if (!s.fileName) {
-                    alert("File not available");
-                    return;
-                  }
-
                   const link = document.createElement("a");
-                  link.href = `https://fsd-project-bd.onrender.com/files/${encodeURIComponent(s.fileName)}`;
-                  link.download = s.fileName;
+                  link.href = `https://fsd-project-bd.onrender.com/submissions/${s.id}/file`;
+                  link.download = s.fileName || "file";
                   link.click();
                 }}
               >

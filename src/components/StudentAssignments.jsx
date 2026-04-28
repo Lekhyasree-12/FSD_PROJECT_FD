@@ -174,7 +174,7 @@ function StudentAssignments() {
                 
                 <div style={{ marginTop: "15px" }}>
                   <button 
-                    onClick={() => window.open(`https://fsd-project-bd.onrender.com/files/${encodeURIComponent(submission.fileName)}`, "_blank")}
+                    onClick={() => window.open(`https://fsd-project-bd.onrender.com/submissions/${submission.id}/file`, "_blank")}
                     className="btn-primary" 
                     style={{ marginRight: "10px", background: "#3b82f6" }}
                   >
