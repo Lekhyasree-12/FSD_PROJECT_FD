@@ -1,13 +1,19 @@
 import { useEffect, useState } from "react";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from "chart.js";
+import { Bar, Pie } from "react-chartjs-2";
 import "./AdminDashboard.css";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 function AdminDashboard() {
 
   // 🔥 SUBJECT STATES
   const [subjects, setSubjects] = useState([]);
   const [subjectName, setSubjectName] = useState("");
+  const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
 
   const navigate = useNavigate();
 
@@ -27,6 +33,10 @@ function AdminDashboard() {
   // ================= LOAD SUBJECTS =================
   useEffect(() => {
     loadSubjects();
+    fetch("https://fsd-project-bd.onrender.com/assignments")
+      .then(res => res.json()).then(setAssignments).catch(console.error);
+    fetch("https://fsd-project-bd.onrender.com/submissions")
+      .then(res => res.json()).then(setSubmissions).catch(console.error);
   }, []);
 
   const loadSubjects = () => {
@@ -118,6 +128,91 @@ function AdminDashboard() {
           Logout
         </button>
       </div>
+
+      {/* ANALYTICS SECTION */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
+        {[
+          { label: "Total Subjects", value: subjects.length, color: "#3b82f6" },
+          { label: "Total Assignments", value: assignments.length, color: "#22c55e" },
+          { label: "Total Submissions", value: submissions.length, color: "#f59e0b" },
+          { label: "Graded", value: submissions.filter(s => s.score != null).length, color: "#8b5cf6" },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "16px",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+            padding: "20px",
+            textAlign: "center"
+          }}>
+            <div style={{ fontSize: "32px", fontWeight: "800", color, marginBottom: "6px" }}>{value}</div>
+            <div style={{ fontSize: "13px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* CHARTS */}
+      {subjects.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "20px",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+            padding: "24px"
+          }}>
+            <h3 style={{ marginBottom: "16px", color: "#0B2E33" }}>📊 Assignments per Subject</h3>
+            <Bar
+              data={{
+                labels: subjects.map(s => s.name),
+                datasets: [{
+                  label: "Assignments",
+                  data: subjects.map(s => assignments.filter(a => a.subjectId === s.id).length),
+                  backgroundColor: "rgba(79,124,130,0.7)",
+                  borderRadius: 8,
+                }]
+              }}
+              options={{
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: { beginAtZero: true, grid: { color: "rgba(0,0,0,0.05)" } },
+                  x: { grid: { display: false } }
+                }
+              }}
+            />
+          </div>
+          <div style={{
+            background: "rgba(255,255,255,0.9)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "20px",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+            padding: "24px"
+          }}>
+            <h3 style={{ marginBottom: "16px", color: "#0B2E33" }}>🎯 Submission Status</h3>
+            <div style={{ maxWidth: "320px", margin: "0 auto" }}>
+              <Pie
+                data={{
+                  labels: ["Graded", "Pending"],
+                  datasets: [{
+                    data: [
+                      submissions.filter(s => s.score != null).length,
+                      submissions.filter(s => s.score == null).length
+                    ],
+                    backgroundColor: ["#22c55e", "#f59e0b"],
+                    borderWidth: 2,
+                    borderColor: "#fff",
+                  }]
+                }}
+                options={{ responsive: true, plugins: { legend: { position: "bottom" } } }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ================= ADD USER ================= */}
       <div className="subject-section">

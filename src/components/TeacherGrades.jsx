@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from "chart.js";
+import { Bar, Doughnut } from "react-chartjs-2";
 import "./TeacherDashboard.css";
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 function TeacherGrades({ selectedSubmission }) {
   const [assignments, setAssignments] = useState([]);
@@ -127,6 +131,29 @@ function TeacherGrades({ selectedSubmission }) {
     F: gradedStudents.filter((s) => s.score < 60).length
   };
 
+  const barChartData = {
+    labels: gradedStudents.map(s => `Student ${s.studentId}`),
+    datasets: [{
+      label: "Score",
+      data: gradedStudents.map(s => s.score),
+      backgroundColor: gradedStudents.map(s =>
+        s.score >= 80 ? "rgba(34,197,94,0.7)" : s.score >= 60 ? "rgba(245,158,11,0.7)" : "rgba(239,68,68,0.7)"
+      ),
+      borderRadius: 8,
+      borderWidth: 0,
+    }]
+  };
+
+  const doughnutData = {
+    labels: ["A (90-100)", "B (80-89)", "C (70-79)", "D (60-69)", "F (<60)"],
+    datasets: [{
+      data: [distribution.A, distribution.B, distribution.C, distribution.D, distribution.F],
+      backgroundColor: ["#22c55e", "#3b82f6", "#f59e0b", "#f97316", "#ef4444"],
+      borderWidth: 2,
+      borderColor: "#fff",
+    }]
+  };
+
   return (
     <div className="grades-container">
 
@@ -134,6 +161,35 @@ function TeacherGrades({ selectedSubmission }) {
       <p className="sub-text">
         View and manage student grades
       </p>
+
+      {/* CHARTS */}
+      {gradedStudents.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "24px" }}>
+          <div className="assignment-card">
+            <h3 style={{ marginBottom: "16px", color: "#0B2E33" }}>📊 Score per Student</h3>
+            <Bar
+              data={barChartData}
+              options={{
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: { beginAtZero: true, max: 100, grid: { color: "rgba(0,0,0,0.05)" } },
+                  x: { grid: { display: false } }
+                }
+              }}
+            />
+          </div>
+          <div className="assignment-card">
+            <h3 style={{ marginBottom: "16px", color: "#0B2E33" }}>🎯 Grade Distribution</h3>
+            <div style={{ maxWidth: "320px", margin: "0 auto" }}>
+              <Doughnut
+                data={doughnutData}
+                options={{ responsive: true, plugins: { legend: { position: "bottom" } } }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GRADING SECTION */}
       {filtered.length === 0 ? (
