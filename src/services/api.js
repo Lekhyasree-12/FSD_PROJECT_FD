@@ -95,6 +95,6 @@ export const SubmissionsAPI = {
       throw new Error(errorText || `Error ${response.status}`);
     }
 
-    return await response.text();
+    return await response.json();
   },
 };

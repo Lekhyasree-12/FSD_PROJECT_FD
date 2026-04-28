@@ -51,7 +51,7 @@ function TeacherGrades({ selectedSubmission }) {
           const text = await res.text();
           throw new Error(`Status ${res.status}: ${text}`);
         }
-        return res.text();
+        return res.json();
       })
       .then(() => {
         alert("Grade saved successfully!");
