@@ -166,3 +166,69 @@
   cursor: pointer;
   color: #0b2e33;
 }
+
+/* Password Strength */
+.pwd-strength-box {
+  margin-top: 10px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: left;
+  animation: slideUp 0.3s ease;
+}
+
+.pwd-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.pwd-bar-seg {
+  flex: 1;
+  height: 6px;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.seg-empty  { background: #e5e7eb; }
+.seg-weak   { background: #ef4444; }
+.seg-medium { background: #f59e0b; }
+.seg-strong { background: #22c55e; }
+
+.pwd-label {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 52px;
+  text-align: right;
+}
+.pwd-label-weak   { color: #ef4444; }
+.pwd-label-medium { color: #f59e0b; }
+.pwd-label-strong { color: #22c55e; }
+
+.pwd-tips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.pwd-tip {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.tip-pass {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.tip-fail {
+  color: #9ca3af;
+  background: #f9fafb;
+}

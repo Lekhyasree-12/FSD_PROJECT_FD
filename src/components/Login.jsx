@@ -15,6 +15,24 @@ function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState("");
 
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return null;
+    const checks = {
+      length: pwd.length >= 8,
+      uppercase: /[A-Z]/.test(pwd),
+      lowercase: /[a-z]/.test(pwd),
+      number: /[0-9]/.test(pwd),
+      special: /[^A-Za-z0-9]/.test(pwd),
+    };
+    const passed = Object.values(checks).filter(Boolean).length;
+    let level = "Weak";
+    if (passed >= 5) level = "Strong";
+    else if (passed >= 3) level = "Medium";
+    return { level, checks, passed };
+  };
+
+  const strength = isSignUp ? getPasswordStrength(password) : null;
+
   // ================= MAIN HANDLER =================
   const handleAuth = () => {
     setError("");
@@ -141,6 +159,43 @@ function Login() {
             setError("");
           }}
         />
+
+        {isSignUp && password && strength && (
+          <div className="pwd-strength-box">
+            <div className="pwd-bar-row">
+              {[1,2,3,4,5].map(i => (
+                <div
+                  key={i}
+                  className={`pwd-bar-seg ${
+                    i <= strength.passed
+                      ? strength.level === "Strong" ? "seg-strong"
+                        : strength.level === "Medium" ? "seg-medium"
+                        : "seg-weak"
+                      : "seg-empty"
+                  }`}
+                />
+              ))}
+              <span className={`pwd-label pwd-label-${
+                strength.level === "Strong" ? "strong"
+                : strength.level === "Medium" ? "medium"
+                : "weak"
+              }`}>{strength.level}</span>
+            </div>
+            <div className="pwd-tips">
+              {[
+                { key: "length",    text: "At least 8 characters" },
+                { key: "uppercase", text: "One uppercase letter (A-Z)" },
+                { key: "lowercase", text: "One lowercase letter (a-z)" },
+                { key: "number",    text: "One number (0-9)" },
+                { key: "special",   text: "One special character (!@#...)" },
+              ].map(({ key, text }) => (
+                <div key={key} className={`pwd-tip ${ strength.checks[key] ? "tip-pass" : "tip-fail" }`}>
+                  {strength.checks[key] ? "✓" : "✗"} {text}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button className="login-btn" onClick={handleAuth}>
           {isSignUp ? "Create Account" : "Login"}
