@@ -173,7 +173,15 @@ function StudentAssignments() {
                 <p style={{ fontWeight: "bold", color: "#16a34a" }}>✅ Submitted: {submission.fileName}</p>
                 
                 <div style={{ marginTop: "15px" }}>
-                  <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "5px" }}>
+                  <button 
+                    onClick={() => window.open(`https://fsd-project-bd.onrender.com/files/${encodeURIComponent(submission.fileName)}`, "_blank")}
+                    className="btn-primary" 
+                    style={{ marginRight: "10px", background: "#3b82f6" }}
+                  >
+                    View File
+                  </button>
+
+                  <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginTop: "15px", marginBottom: "5px" }}>
                     Select new file to update:
                   </label>
                   <input
