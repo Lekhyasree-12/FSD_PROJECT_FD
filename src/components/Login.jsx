@@ -67,14 +67,14 @@ function Login() {
 
     console.log("LOGIN RESPONSE:", user);
 
-    if (!user) {
+    if (!user || !user.role) {
       setError("Invalid email or password");
       return;
     }
 
-    login({ id: user.email, role: user.role.toLowerCase() });
-
-    navigate(`/${user.role.toLowerCase()}`);
+    const role = user.role.toLowerCase();
+    login({ id: user.email, role });
+    navigate(`/${role}`);
 
   } catch (err) {
     console.error(err);
